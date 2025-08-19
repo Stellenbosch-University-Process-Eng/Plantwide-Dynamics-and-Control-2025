@@ -21,17 +21,21 @@ N = 20;  % Number of gridpoints to evaluate is N^2
 
 % Define constraint and profit functions
 h1 = @(u) u.Ts - 350; % K, h1: maximum reactor temperature
+h4 = @(u) p.Fj*(u.Tjs-d.Tj0)-20.1; % maximum cooling rate
+h7 = @(u) u.CAs-5; % maximum reactant concentration in the product stream
 phi = @(u) 10*u.F*(d.CA0 - u.CAs) - 0.3*u.F*d.CA0 - 0.01*p.Fj*(d.Tj0 - u.Tjs);
 % Loop over every gridpoint: For visualization
 H1 = zeros(N,N); 
-% TODO
+H4 = zeros(N,N);
+H7 = zeros(N,N);
 Phi = zeros(N,N);
 for i = 1:N
     for j = 1:N
         u = SteadyState(F(i,j), V(i,j), d, p);
         % Calculate constraint functions at each grid point
         H1(i,j) = h1(u);
-        % TODO
+        H4(i,j) = h4(u);
+        H7(i,j) = h7(u);
         % Calculate profit at each grid point
         Phi(i,j) = phi(u);
     end
@@ -42,7 +46,7 @@ Fguess = 0.3; % initial guess
 Vguess = 400; % initial guess
 x = fmincon(@(x) objectiveFunction(x, d, p, phi), [Fguess; Vguess],...
             [],[],[],[], [0.05, 100], [0.8, 500], ...
-            @(x) simpleNonLinearConstraints(x, d, p, h1, h4)); % TODO
+            @(x) nonLinearConstraints(x, d, p, h1, h4, h7)); % TODO
 % x = fminsearch(@(x) simpleObjectiveFunction_penalty(x, d, p, h1, phi), [Fguess; Vguess]);
 
 % Show constraints and objective function with optimization result
@@ -51,9 +55,13 @@ contourf(F, V, Phi);
 hold on
 [C1,handle_h1] = contour(F,V,H1,[0,0],'k','LineWidth',2);
 [C1n,handle_h1n] =  contour(F,V,H1,[-1,-1],'k--','LineWidth',2); % indicates direction of decreasing constraint
+[C4,handle_h4] = contour(F,V,H4,[0,0],'r','LineWidth',2);
+[C4n,handle_h4n] =  contour(F,V,H4,[-1,-1],'r--','LineWidth',2); % indicates direction of decreasing constraint
+[C7,handle_h7] = contour(F,V,H7,[0,0],'magenta','LineWidth',2);
+[C7n,handle_h7n] =  contour(F,V,H7,[-1,-1],'--','LineWidth',2,'Color','magenta'); % indicates direction of decreasing constraint
 handle_cb = colorbar;
 handle_cb.Label.String = 'Phi';
-handle_opt = plot(x(1), x(2), 'rx','LineWidth',2);
+handle_opt = plot(x(1), x(2), 'wx','LineWidth',2);
 hold off
 xlabel('F'); ylabel('V');
-legend([handle_h1, handle_h1n, handle_opt],{'h1 constraint','h1 decreasing','optimum'})
+legend([handle_h1, handle_h1n, handle_h4, handle_h4n, handle_h7, handle_h7n, handle_opt],{'h1 constraint','h1 decreasing','h4 constraint','h4 decreasing','h7 constraint','h7 decreasing','optimum'})

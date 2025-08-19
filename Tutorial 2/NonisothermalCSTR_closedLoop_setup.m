@@ -11,11 +11,11 @@ d.T0 = 300;         % K, feed stream temperature
 d.CA0 = 20;         % mol/L feed stream concentration
 d.UA_pcp = 0.350;   % K/s, jacket overall heat transfer coefficient and area
 % Operating point and initial steady state
-F = 0.4; % operating point guess
-V = 255; % operating point guess
+F = 0.65; % operating point guess
+V = 218; % operating point guess
 u_simulate = SteadyState(F, V, d, p);
 % Run simulation
-out = sim("NonisothermalCSTR_openLoop.slx");
+out = sim("NonisothermalCSTR_closedLoop.slx");
 % CA and T constraint violation
 figure;
 plot(out.CA,out.T)
@@ -41,6 +41,3 @@ hold on;
 plot([0 3600*4],[phi_ave phi_ave],'green','LineWidth',2)
 xlabel('Time')
 ylabel('phi')
-
-
-
